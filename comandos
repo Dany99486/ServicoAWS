@@ -1,0 +1,7 @@
+set AWS_ACCESS_KEY_ID=
+set AWS_SECRET_ACCESS_KEY=
+set AWS_SESSION_TOKEN=
+
+aws rekognition create-collection --collection-id primeTechUsers
+aws rekognition delete-collection --collection-id primeTechUsers
+aws rekognition list-collections
