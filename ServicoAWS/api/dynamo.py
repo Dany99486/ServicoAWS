@@ -25,3 +25,15 @@ def get_user_by_face_id(face_id):
     )
     items = response.get('Items', [])
     return items[0] if items else None
+
+def create_repair_request(user_id, request_id, data):
+    table = dynamodb.Table('RepairRequests')
+    table.put_item(
+        Item={
+            'user_id': user_id,
+            'request_id': request_id,
+            'service_type': data['service_type'],
+            'appointment_date': str(data['appointment_date']),
+            'status': 'iniciado'
+        }
+    )

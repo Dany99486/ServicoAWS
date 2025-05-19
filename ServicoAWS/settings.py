@@ -17,6 +17,7 @@ AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
 AWS_REGION = config('AWS_REGION')
 AWS_SESSION_TOKEN = config('AWS_SESSION_TOKEN')  # Token temporário
+STEP_FUNCTION_ARN = config('STEP_FUNCTION_ARN')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent

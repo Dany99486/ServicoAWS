@@ -1,8 +1,10 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import FaceRegisterSerializer, FaceLoginSerializer
+from .serializers import FaceRegisterSerializer, FaceLoginSerializer, RepairRequestSerializer
 from .rekognition import add_face, search_face
-from .dynamo import update_user_face_id, get_user_by_face_id
+from .dynamo import update_user_face_id, get_user_by_face_id, create_repair_request
+from .authentication import get_user_id_from_request
+from .stepfunction import start_repair_workflow
 import jwt
 from django.conf import settings
 
@@ -42,4 +44,29 @@ class FaceLoginView(APIView):
 
             token = jwt.encode({'user_id': user['user_id']}, settings.SECRET_KEY, algorithm='HS256')
             return Response({'token': token})
+        return Response(serializer.errors, status=400)
+
+class CreateRepairRequestView(APIView):
+    def post(self, request):
+        user_id = get_user_id_from_request(request)
+
+        serializer = RepairRequestSerializer(data=request.data)
+        if serializer.is_valid():
+            data = serializer.validated_data
+            request_id = str(uuid4())
+
+            # Gravar no Dynamo e iniciar Step Function
+            create_repair_request(user_id, request_id, data)
+            response = start_repair_workflow({
+                "user_id": user_id,
+                "request_id": request_id,
+                "service_type": data['service_type'],
+                "appointment_date": str(data['appointment_date'])
+            })
+
+            return Response({
+                "message": "Pedido iniciado",
+                "executionArn": response['executionArn'],
+                "request_id": request_id
+            })
         return Response(serializer.errors, status=400)

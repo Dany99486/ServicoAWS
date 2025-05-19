@@ -10,3 +10,7 @@ class FaceRegisterSerializer(serializers.Serializer):
 
 class FaceLoginSerializer(serializers.Serializer):
     image = serializers.ImageField()
+
+class RepairRequestSerializer(serializers.Serializer):
+    service_type = serializers.CharField()
+    appointment_date = serializers.DateTimeField()
