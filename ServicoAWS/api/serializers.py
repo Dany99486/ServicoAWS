@@ -14,3 +14,6 @@ class FaceLoginSerializer(serializers.Serializer):
 class RepairRequestSerializer(serializers.Serializer):
     service_type = serializers.CharField()
     appointment_date = serializers.DateTimeField()
+    
+class RepairStatusSerializer(serializers.Serializer):
+    request_id = serializers.CharField()

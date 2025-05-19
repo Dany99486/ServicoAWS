@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .serializers import FaceRegisterSerializer, FaceLoginSerializer, RepairRequestSerializer
 from .rekognition import add_face, search_face
-from .dynamo import update_user_face_id, get_user_by_face_id, create_repair_request
+from .dynamo import update_user_face_id, get_user_by_face_id, create_repair_request, get_appointments_for_next_week
 from .authentication import get_user_id_from_request
 from .stepfunction import start_repair_workflow
 import jwt
@@ -70,3 +70,50 @@ class CreateRepairRequestView(APIView):
                 "request_id": request_id
             })
         return Response(serializer.errors, status=400)
+    
+from .dynamo import get_repair_request
+from .serializers import RepairStatusSerializer
+from .authentication import get_user_id_from_request
+
+class RepairStatusView(APIView):
+    def get(self, request):
+        user_id = get_user_id_from_request(request)
+        serializer = RepairStatusSerializer(data=request.data)
+        if serializer.is_valid():
+            request_id = serializer.validated_data['request_id']
+            item = get_repair_request(user_id, request_id)
+            if item:
+                return Response({
+                    "status": item.get("status", "desconhecido"),
+                    "data": item
+                })
+            return Response({"error": "Pedido não encontrado"}, status=404)
+        return Response(serializer.errors, status=400)
+
+class ShopInfoView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request):
+        upcoming_slots = get_appointments_for_next_week()
+
+        shop_info = {
+            "services": [
+                {"type": "screen_replacement", "price": 100.0, "duration_minutes": 90},
+                {"type": "virus_removal", "price": 50.0, "duration_minutes": 60},
+                {"type": "battery_replacement", "price": 80.0, "duration_minutes": 45}
+            ],
+            "working_hours": {
+                "weekdays": "09:00 - 18:00",
+                "saturday": "10:00 - 14:00",
+                "sunday": "Closed"
+            },
+            "available_slots": upcoming_slots,
+            "location": {
+                "address": "Rua Exemplo 123, Lisboa",
+                "contact": "+351 912 345 678",
+                "email": "suporte@primetech.pt"
+            }
+        }
+
+        return Response(shop_info)

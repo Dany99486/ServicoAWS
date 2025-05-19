@@ -1,5 +1,7 @@
 import boto3
+from boto3.dynamodb.conditions import Key
 from django.conf import settings
+from datetime import date, timedelta
 
 dynamodb = boto3.resource(
     'dynamodb',
@@ -37,3 +39,30 @@ def create_repair_request(user_id, request_id, data):
             'status': 'iniciado'
         }
     )
+    
+def get_repair_request(user_id, request_id):
+    table = dynamodb.Table('RepairRequests')
+    response = table.get_item(Key={'user_id': user_id, 'request_id': request_id})
+    return response.get('Item')
+
+def get_appointments_for_next_week():
+    table = dynamodb.Table('Appointments')
+    today = date.today()
+    all_available = []
+
+    for i in range(7):
+        current_date = today + timedelta(days=i)
+        date_str = current_date.isoformat()
+
+        response = table.query(
+            KeyConditionExpression=Key('date').eq(date_str)
+        )
+        slots = response.get('Items', [])
+        available_slots = [s['time_slot'] for s in slots if s.get('is_available')]
+
+        all_available.append({
+            "date": date_str,
+            "available_slots": available_slots
+        })
+
+    return all_available

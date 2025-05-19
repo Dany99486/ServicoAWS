@@ -16,12 +16,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from .views import FaceRegisterView, FaceLoginView, CreateRepairRequestView
+from .views import FaceRegisterView, FaceLoginView, CreateRepairRequestView, RepairStatusView, ShopInfoView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('face-register/', FaceRegisterView.as_view()),
     path('face-login/', FaceLoginView.as_view()),
     path('repair-request/', CreateRepairRequestView.as_view()),
+    path('repair-status/', RepairStatusView.as_view()),
+    path('shop-info/', ShopInfoView.as_view()),
 ]
 
