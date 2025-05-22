@@ -1,13 +1,12 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import FaceRegisterSerializer, FaceLoginSerializer, RepairRequestSerializer
+from .serializers import FaceRegisterSerializer, FaceLoginSerializer, RepairRequestSerializer, RepairStatusSerializer
 from .rekognition import add_face, search_face
-from .dynamo import update_user_face_id, get_user_by_face_id, create_repair_request, get_appointments_for_next_week
+from .dynamo import update_user_face_id, get_user_by_face_id, get_appointments_for_next_week, get_repair_request
 from .authentication import get_user_id_from_request
 from .stepfunction import start_repair_workflow
 import jwt
 from django.conf import settings
-
 from uuid import uuid4
 
 class FaceRegisterView(APIView):
@@ -49,32 +48,30 @@ class FaceLoginView(APIView):
 class CreateRepairRequestView(APIView):
     def post(self, request):
         user_id = get_user_id_from_request(request)
-
         serializer = RepairRequestSerializer(data=request.data)
+
         if serializer.is_valid():
             data = serializer.validated_data
             request_id = str(uuid4())
 
-            # Gravar no Dynamo e iniciar Step Function
-            create_repair_request(user_id, request_id, data)
-            response = start_repair_workflow({
+            # 2. Inicia a Step Function
+            input_data = {
                 "user_id": user_id,
                 "request_id": request_id,
                 "service_type": data['service_type'],
-                "appointment_date": str(data['appointment_date'])
-            })
+                "appointment_date": str(data['appointment_date']),
+                "time_slot": data['time_slot']
+            }
+            response = start_repair_workflow(input_data)
 
             return Response({
-                "message": "Pedido iniciado",
-                "executionArn": response['executionArn'],
-                "request_id": request_id
+                "message": "Pedido submetido com sucesso",
+                "request_id": request_id,
+                "executionArn": response['executionArn']
             })
+
         return Response(serializer.errors, status=400)
     
-from .dynamo import get_repair_request
-from .serializers import RepairStatusSerializer
-from .authentication import get_user_id_from_request
-
 class RepairStatusView(APIView):
     def get(self, request):
         user_id = get_user_id_from_request(request)
