@@ -56,3 +56,24 @@ def get_appointments_for_next_week():
 
     return all_available
 
+def get_all_appointments_for_next_week():
+    table = dynamodb.Table('Appointments')
+    today = date.today()
+    all_appointments = []
+
+    for i in range(7):
+        current_date = today + timedelta(days=i)
+        date_str = current_date.isoformat()
+
+        response = table.query(
+            KeyConditionExpression=Key('date').eq(date_str)
+        )
+        slots = response.get('Items', [])
+        all_slots = [s['time_slot'] for s in slots]
+
+        all_appointments.append({
+            "date": date_str,
+            "slots": all_slots
+        })
+
+    return all_appointments
