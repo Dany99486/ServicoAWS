@@ -1,6 +1,8 @@
 set AWS_ACCESS_KEY_ID=
 set AWS_SECRET_ACCESS_KEY=
 set AWS_SESSION_TOKEN=
+set AWS_REGION=us-east-1
+
 
 Linux
 

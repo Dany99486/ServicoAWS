@@ -6,8 +6,6 @@ def decode_jwt(token):
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
         return payload
-    except jwt.ExpiredSignatureError:
-        raise AuthenticationFailed("Token expirado")
     except jwt.InvalidTokenError:
         raise AuthenticationFailed("Token inválido")
 

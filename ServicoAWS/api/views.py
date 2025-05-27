@@ -1,10 +1,10 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import FaceRegisterSerializer, FaceLoginSerializer, RepairRequestSerializer, RepairStatusSerializer
+from .serializers import ClientApprovalSerializer, ConfirmarPagamentoSerializer, ConfirmarPresencaSerializer, ConfirmarRecolhaSerializer, FaceRegisterSerializer, FaceLoginSerializer, RepairRequestSerializer, RepairStatusSerializer, StaffConcluiReparacaoSerializer
 from .rekognition import add_face, search_face
 from .dynamo import update_user_face_id, get_user_by_face_id, get_appointments_for_next_week, get_repair_request
 from .authentication import get_user_id_from_request
-from .stepfunction import start_repair_workflow
+from .stepfunction import send_approval_result, send_pagamento_result, send_present_result, send_recolha_result, send_repair_result, start_repair_workflow
 import jwt
 from django.conf import settings
 from uuid import uuid4
@@ -54,14 +54,17 @@ class CreateRepairRequestView(APIView):
             data = serializer.validated_data
             request_id = str(uuid4())
 
-            # 2. Inicia a Step Function
+            # 1. Preparar dados para a Step Function, incluindo o cartão
             input_data = {
                 "user_id": user_id,
                 "request_id": request_id,
                 "service_type": data['service_type'],
                 "appointment_date": str(data['appointment_date']),
-                "time_slot": data['time_slot']
+                "time_slot": data['time_slot'],
+                "card": data['card']  # novo: cartão incluído
             }
+
+            # 2. Inicia a Step Function
             response = start_repair_workflow(input_data)
 
             return Response({
@@ -88,9 +91,6 @@ class RepairStatusView(APIView):
         return Response(serializer.errors, status=400)
 
 class ShopInfoView(APIView):
-    authentication_classes = []
-    permission_classes = []
-
     def get(self, request):
         upcoming_slots = get_appointments_for_next_week()
 
@@ -114,3 +114,131 @@ class ShopInfoView(APIView):
         }
 
         return Response(shop_info)
+    
+class ClientApprovalView(APIView):
+    def post(self, request):
+        user_id = get_user_id_from_request(request)
+        serializer = ClientApprovalSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+
+        request_id = str(serializer.validated_data['request_id'])
+        aprovado = serializer.validated_data['aprovado']
+
+        # Buscar o pedido
+        item = get_repair_request(user_id, request_id)
+        if not item:
+            return Response({'error': 'Pedido não encontrado'}, status=404)
+
+        task_token = item.get('approval_task_token')
+        if not task_token:
+            return Response({'error': 'Token de aprovação não encontrado'}, status=500)
+
+        # Enviar resultado para Step Function
+        try:
+            send_approval_result(task_token, aprovado)
+        except Exception as e:
+            return Response({'error': f'Erro ao enviar para Step Function: {str(e)}'}, status=500)
+
+        return Response({'message': 'Resposta enviada com sucesso para a Step Function'})
+
+class StaffConfirmarPresencaView(APIView):
+    def post(self, request):
+        serializer = ConfirmarPresencaSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+
+        user_id = serializer.validated_data['user_id']
+        request_id = serializer.validated_data['request_id']
+        presente = serializer.validated_data['presente']
+
+        item = get_repair_request(user_id, request_id)
+        if not item:
+            return Response({'error': 'Pedido não encontrado'}, status=404)
+
+        task_token = item.get('presenca_task_token')
+        if not task_token:
+            return Response({'error': 'Token de presença não encontrado'}, status=500)
+
+        try:
+            send_present_result(task_token, presente)
+        except Exception as e:
+            return Response({'error': f'Erro ao comunicar com Step Function: {str(e)}'}, status=500)
+
+        return Response({'message': 'Presença processada com sucesso'})
+
+class ConfirmarPagamentoFinalView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request):
+        serializer = ConfirmarPagamentoSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+
+        user_id = get_user_id_from_request(request)
+        request_id = serializer.validated_data['request_id']
+
+        item = get_repair_request(user_id, request_id)
+        if not item:
+            return Response({'error': 'Pedido não encontrado'}, status=404)
+
+        task_token = item.get('pagamento_task_token')
+        if not task_token:
+            return Response({'error': 'Token de pagamento não encontrado'}, status=500)
+
+        try:
+            send_pagamento_result(task_token)
+        except Exception as e:
+            return Response({'error': f'Erro ao enviar para Step Function: {str(e)}'}, status=500)
+
+        return Response({'message': 'Pagamento confirmado com sucesso'})
+    
+class ConfirmarRecolhaView(APIView):
+    def post(self, request):
+        serializer = ConfirmarRecolhaSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+
+        user_id = serializer.validated_data['user_id']
+        request_id = serializer.validated_data['request_id']
+
+        item = get_repair_request(user_id, request_id)
+        if not item:
+            return Response({'error': 'Pedido não encontrado'}, status=404)
+
+        task_token = item.get('recolha_task_token')
+        if not task_token:
+            return Response({'error': 'Token de recolha não encontrado'}, status=500)
+
+        try:
+            send_recolha_result(task_token)
+        except Exception as e:
+            return Response({'error': f'Erro ao enviar para Step Function: {str(e)}'}, status=500)
+
+        return Response({'message': 'Recolha confirmada com sucesso'})
+    
+class StaffConcluiReparacaoView(APIView):
+    def post(self, request):
+        serializer = StaffConcluiReparacaoSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+        
+        user_id = serializer.validated_data['user_id']
+        request_id = serializer.validated_data['request_id']
+        
+        item = get_repair_request(user_id, request_id)
+        if not item:
+            return Response({'error': 'Pedido não encontrado'}, status=404)
+        
+        task_token = item.get('conclusao_task_token')
+        if not task_token:
+            return Response({'error': 'Token de conclusão não encontrado'}, status=500)
+        
+        try:
+            send_repair_result(task_token)
+        except Exception as e:
+            return Response({'error': f'Erro ao comunicar com Step Function: {str(e)}'}, status=500)
+        
+        return Response({'message': 'Reparação concluída com sucesso'})

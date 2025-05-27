@@ -55,3 +55,4 @@ def get_appointments_for_next_week():
         })
 
     return all_available
+
