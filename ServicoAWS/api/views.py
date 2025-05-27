@@ -137,7 +137,7 @@ class ClientApprovalView(APIView):
 
         # Enviar resultado para Step Function
         try:
-            send_approval_result(task_token, aprovado)
+            send_approval_result(task_token, aprovado, user_id, request_id)
         except Exception as e:
             return Response({'error': f'Erro ao enviar para Step Function: {str(e)}'}, status=500)
 
@@ -162,7 +162,7 @@ class StaffConfirmarPresencaView(APIView):
             return Response({'error': 'Token de presença não encontrado'}, status=500)
 
         try:
-            send_present_result(task_token, presente)
+            send_present_result(task_token, presente, user_id, request_id, item.get('service_type'))
         except Exception as e:
             return Response({'error': f'Erro ao comunicar com Step Function: {str(e)}'}, status=500)
 
@@ -186,7 +186,7 @@ class ConfirmarPagamentoFinalView(APIView):
             return Response({'error': 'Token de pagamento não encontrado'}, status=500)
 
         try:
-            send_pagamento_result(task_token)
+            send_pagamento_result(task_token, user_id, request_id)
         except Exception as e:
             return Response({'error': f'Erro ao enviar para Step Function: {str(e)}'}, status=500)
 
@@ -210,7 +210,7 @@ class ConfirmarRecolhaView(APIView):
             return Response({'error': 'Token de recolha não encontrado'}, status=500)
 
         try:
-            send_recolha_result(task_token)
+            send_recolha_result(task_token, user_id, request_id)
         except Exception as e:
             return Response({'error': f'Erro ao enviar para Step Function: {str(e)}'}, status=500)
 
@@ -234,7 +234,7 @@ class StaffConcluiReparacaoView(APIView):
             return Response({'error': 'Token de conclusão não encontrado'}, status=500)
         
         try:
-            send_repair_result(task_token)
+            send_repair_result(task_token, user_id, request_id)
         except Exception as e:
             return Response({'error': f'Erro ao comunicar com Step Function: {str(e)}'}, status=500)
         
