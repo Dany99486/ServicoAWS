@@ -21,7 +21,7 @@ class RepairRequestSerializer(serializers.Serializer):
     service_type = serializers.CharField()
     appointment_date = serializers.DateTimeField()
     time_slot = serializers.CharField()
-    card = CardSerializer()
+    #card = CardSerializer()
     
 class RepairStatusSerializer(serializers.Serializer):
     request_id = serializers.CharField()

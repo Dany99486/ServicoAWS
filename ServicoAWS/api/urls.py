@@ -28,7 +28,7 @@ urlpatterns = [
     path('client-approval/', ClientApprovalView.as_view()),
     path('client-present/', StaffConfirmarPresencaView.as_view()),
     path('repair-done/', StaffConcluiReparacaoView.as_view()),
-    path('api/confirmar-pagamento/', ConfirmarPagamentoFinalView.as_view()),
-    path('api/confirmar-recolha/', ConfirmarRecolhaView.as_view()),
+    path('client-pay/', ConfirmarPagamentoFinalView.as_view()),
+    path('confirmar-recolha/', ConfirmarRecolhaView.as_view()),
 ]
 

@@ -60,8 +60,8 @@ class CreateRepairRequestView(APIView):
                 "request_id": request_id,
                 "service_type": data['service_type'],
                 "appointment_date": str(data['appointment_date']),
-                "time_slot": data['time_slot'],
-                "card": data['card']  # novo: cartão incluído
+                "time_slot": data['time_slot']
+                #"card": data['card']  # novo: cartão incluído
             }
 
             # 2. Inicia a Step Function
@@ -169,9 +169,6 @@ class StaffConfirmarPresencaView(APIView):
         return Response({'message': 'Presença processada com sucesso'})
 
 class ConfirmarPagamentoFinalView(APIView):
-    authentication_classes = []
-    permission_classes = []
-
     def post(self, request):
         serializer = ConfirmarPagamentoSerializer(data=request.data)
         if not serializer.is_valid():
