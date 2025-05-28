@@ -4,13 +4,10 @@ import './App.css';
 class Main extends Component {
 
   appointments = {
-    ids: [],
-    doctors: [],
-    specialitys: [],
-    dates: [],
-    hours: [],
-    rooms: [],
-    states: []
+    date: [],
+    time_slot: [],
+    is_available: [],
+    request_id: []
   }
 
   async componentDidMount() {
