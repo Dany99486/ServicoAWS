@@ -1,5 +1,5 @@
 import boto3
-from boto3.dynamodb.conditions import Key
+from boto3.dynamodb.conditions import Key, Attr
 from django.conf import settings
 from datetime import date, timedelta
 
@@ -56,24 +56,21 @@ def get_appointments_for_next_week():
 
     return all_available
 
-def get_all_appointments_for_next_week():
+def get_appointments_from_today_flat():
     table = dynamodb.Table('Appointments')
-    today = date.today()
-    all_appointments = []
+    today = date.today().isoformat()  # Converte a data para uma string no formato ISO
+    response = table.scan(
+        FilterExpression=Attr('date').gte(today)
+    )
+    slots = response.get('Items', [])
+    slots_sorted = sorted(slots, key=lambda x: (x['date'], x['time_slot']))
 
-    for i in range(7):
-        current_date = today + timedelta(days=i)
-        date_str = current_date.isoformat()
+    return slots_sorted
 
-        response = table.query(
-            KeyConditionExpression=Key('date').eq(date_str)
-        )
-        slots = response.get('Items', [])
-        all_slots = [s['time_slot'] for s in slots]
+def get_all_repairs():
+    table = dynamodb.Table('RepairRequests')
+    response = table.scan()
+    repairs = response.get('Items', [])
+    repairs_sorted = sorted(repairs, key=lambda x: (x['appointment_date'], x['time_slot']))
 
-        all_appointments.append({
-            "date": date_str,
-            "slots": all_slots
-        })
-
-    return all_appointments
+    return repairs_sorted

@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .serializers import ClientApprovalSerializer, ConfirmarPagamentoSerializer, ConfirmarPresencaSerializer, ConfirmarRecolhaSerializer, FaceRegisterSerializer, FaceLoginSerializer, RepairRequestSerializer, RepairStatusSerializer, StaffConcluiReparacaoSerializer
 from .rekognition import add_face, search_face
-from .dynamo import update_user_face_id, get_user_by_face_id, get_appointments_for_next_week, get_repair_request
+from .dynamo import update_user_face_id, get_user_by_face_id, get_appointments_for_next_week, get_repair_request, get_appointments_from_today_flat, get_all_repairs
 from .authentication import get_user_id_from_request
 from .stepfunction import send_approval_result, send_pagamento_result, send_present_result, send_recolha_result, send_repair_result, start_repair_workflow
 import jwt
@@ -24,8 +24,6 @@ class FaceRegisterView(APIView):
             update_user_face_id(user_id, face_id)
             return Response({'message': 'Face registered', 'user_id': user_id, 'face_id': face_id})
         return Response(serializer.errors, status=400)
-
-
 
 class FaceLoginView(APIView):
     def post(self, request):
@@ -114,7 +112,7 @@ class ShopInfoView(APIView):
         }
 
         return Response(shop_info)
-    
+
 class ClientApprovalView(APIView):
     def post(self, request):
         user_id = get_user_id_from_request(request)
@@ -239,3 +237,17 @@ class StaffConcluiReparacaoView(APIView):
             return Response({'error': f'Erro ao comunicar com Step Function: {str(e)}'}, status=500)
         
         return Response({'message': 'Reparação concluída com sucesso'})
+    
+class AppointmentsListView(APIView):
+    def get(self, request):
+        appointments = get_appointments_from_today_flat()
+        return Response({
+            "appointments": appointments
+        })
+
+class AllRepairsView(APIView):
+    def get(self, request):
+        repairs = get_all_repairs()
+        return Response({
+            "repairs": repairs
+        })

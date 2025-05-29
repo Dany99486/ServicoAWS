@@ -1,7 +1,9 @@
 import axios from 'axios'
 
+const API_BASE_URL = 'http://127.0.0.1:8000/'; // URL base configurável
+
 function DataFetchGet(url,data=null) {
-    url='http://127.0.0.1:8000/' + url;
+    url=API_BASE_URL + url;
 
     //access token saved in local storage, if not exists return null
     let token=localStorage.getItem("token")

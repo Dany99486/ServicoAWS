@@ -1,4 +1,21 @@
 import React from 'react';
+import RepairList from './components/RepairList';
+
+function App() {
+  return (
+    <div>
+      <h1>Gestão da Loja – PrimeTech</h1>
+      <RepairList filter="agendado" />
+      <RepairList filter="diagnosticado" />
+      <RepairList filter="entregue" />
+    </div>
+  );
+}
+
+export default App;
+
+
+/*import React from 'react';
 import logo from './logo.svg';
 import './App.css';
 
@@ -23,4 +40,4 @@ function App() {
   );
 }
 
-export default App;
+export default App;*/
