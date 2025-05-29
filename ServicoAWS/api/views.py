@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .serializers import ClientApprovalSerializer, ConfirmarPagamentoSerializer, ConfirmarPresencaSerializer, ConfirmarRecolhaSerializer, FaceRegisterSerializer, FaceLoginSerializer, RepairRequestSerializer, RepairStatusSerializer, StaffConcluiReparacaoSerializer
 from .rekognition import add_face, search_face
-from .dynamo import update_user_face_id, get_user_by_face_id, get_appointments_for_next_week, get_repair_request, get_appointments_from_today_flat, get_all_repairs
+from .dynamo import update_user_face_id, get_user_by_face_id, get_appointments_for_next_week, get_repair_request, get_appointments_from_today_flat, get_all_repairs, get_all_users
 from .authentication import get_user_id_from_request
 from .stepfunction import send_approval_result, send_pagamento_result, send_present_result, send_recolha_result, send_repair_result, start_repair_workflow
 import jwt
@@ -250,4 +250,11 @@ class AllRepairsView(APIView):
         repairs = get_all_repairs()
         return Response({
             "repairs": repairs
+        })
+    
+class AllUsersView(APIView):
+    def get(self, request):
+        users = get_all_users()
+        return Response({
+            "users": users
         })

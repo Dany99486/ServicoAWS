@@ -74,3 +74,11 @@ def get_all_repairs():
     repairs_sorted = sorted(repairs, key=lambda x: (x['appointment_date'], x['time_slot']))
 
     return repairs_sorted
+
+def get_all_users():
+    table = dynamodb.Table('Users')
+    response = table.scan()
+    users = response.get('Items', [])
+    users_sorted = sorted(users, key=lambda x: x['user_id'])
+
+    return users_sorted
