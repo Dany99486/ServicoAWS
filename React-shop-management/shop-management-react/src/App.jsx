@@ -1,43 +1,61 @@
-import React from 'react';
-import RepairList from './components/RepairList';
+import React, { useState } from 'react';
+import { 
+  Container,
+  Typography,
+  Paper,
+  Box,
+  Tabs,
+  Tab
+} from '@mui/material';
+import { Build, CalendarToday } from '@mui/icons-material';
+import Reparacoes from './Reparacoes';
+import Appointments from './Appointments';
 
-function App() {
+export default function App() {
+  const [activeTab, setActiveTab] = useState('reparacoes');
+
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+  };
+
   return (
-    <div>
-      <h1>Gestão da Loja – PrimeTech</h1>
-      <RepairList filter="agendado" />
-      <RepairList filter="diagnosticado" />
-      <RepairList filter="entregue" />
-    </div>
-  );
-}
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      {/* Título */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+          PrimeTech – Gestão
+        </Typography>
+      </Box>
 
-export default App;
-
-
-/*import React from 'react';
-import logo from './logo.svg';
-import './App.css';
-
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
+      {/* Tabs */}
+      <Paper sx={{ mb: 4 }}>
+        <Tabs 
+          value={activeTab}
+          onChange={handleTabChange}
+          variant="fullWidth"
+          indicatorColor="primary"
+          textColor="primary"
         >
-          Learn React
-        </a>
-      </header>
-    </div>
+          <Tab 
+            value="reparacoes" 
+            label="Reparações" 
+            icon={<Build />} 
+            iconPosition="start" 
+          />
+          <Tab 
+            value="appointments" 
+            label="Agendamentos" 
+            icon={<CalendarToday />} 
+            iconPosition="start" 
+          />
+        </Tabs>
+      </Paper>
+
+      {/* Conteúdo */}
+      <Paper sx={{ p: 4 }}>
+        {activeTab === 'reparacoes' && <Reparacoes />}
+        {activeTab === 'appointments' && <Appointments />}
+      </Paper>
+    </Container>
   );
 }
-
-export default App;*/

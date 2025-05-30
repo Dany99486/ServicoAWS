@@ -1,5 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import status
 from .serializers import ClientApprovalSerializer, ConfirmarPagamentoSerializer, ConfirmarPresencaSerializer, ConfirmarRecolhaSerializer, FaceRegisterSerializer, FaceLoginSerializer, RepairRequestSerializer, RepairStatusSerializer, StaffConcluiReparacaoSerializer
 from .rekognition import add_face, search_face
 from .dynamo import update_user_face_id, get_user_by_face_id, get_appointments_for_next_week, get_repair_request, get_appointments_from_today_flat, get_all_repairs, get_all_users
@@ -240,21 +241,48 @@ class StaffConcluiReparacaoView(APIView):
     
 class AppointmentsListView(APIView):
     def get(self, request):
-        appointments = get_appointments_from_today_flat()
-        return Response({
-            "appointments": appointments
-        })
+        try:
+            appointments = get_appointments_from_today_flat()
+            if not appointments:
+                return Response(
+                    {"message": "Não há agendamentos disponíveis."},
+                    status=status.HTTP_204_NO_CONTENT
+                )
+            return Response({"appointments": appointments})
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class AllRepairsView(APIView):
     def get(self, request):
-        repairs = get_all_repairs()
-        return Response({
-            "repairs": repairs
-        })
-    
+        try:
+            repairs = get_all_repairs()
+            if not repairs:
+                return Response(
+                    {"message": "Não há reparações disponíveis."},
+                    status=status.HTTP_204_NO_CONTENT
+                )
+            return Response({"repairs": repairs})
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 class AllUsersView(APIView):
     def get(self, request):
-        users = get_all_users()
-        return Response({
-            "users": users
-        })
+        try:
+            users = get_all_users()
+            if not users:
+                return Response(
+                    {"message": "Não há utilizadores disponíveis."},
+                    status=status.HTTP_204_NO_CONTENT
+                )
+            return Response({"users": users})
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
