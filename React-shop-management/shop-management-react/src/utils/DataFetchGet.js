@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE_URL = 'http://127.0.0.1:8000/'; // URL base configurável
+const API_BASE_URL = 'http://estrabalho.us-east-1.elasticbeanstalk.com/'; // URL base configurável
 
 function DataFetchGet(url,data=null) {
     url=API_BASE_URL + url;

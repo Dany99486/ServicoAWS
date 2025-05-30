@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 function DataFetchPut(url,data) {
-        url='http://127.0.0.1:8000/' + url;
+        url='http://estrabalho.us-east-1.elasticbeanstalk.com/' + url;
 
         //access token saved in local storage, if not exists return null
         let token=localStorage.getItem("token")

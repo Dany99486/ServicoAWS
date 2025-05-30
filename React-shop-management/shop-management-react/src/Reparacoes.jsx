@@ -141,7 +141,7 @@ class Reparacoes extends Component {
                   <td>{notes[i] ?? "–"}</td>
                   <td>
                     {statuses[i] === "aguardando_confirmacao_presenca" && (
-                      <button className="finish" onClick={() => this.marcarComoPresente(i)}>
+                      <button className="finish" onClick={() => this.marcarComoConcluida(i)}>
                         Confirmar presença
                       </button>
                     )}
