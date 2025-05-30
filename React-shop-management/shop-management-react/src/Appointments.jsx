@@ -42,7 +42,6 @@ class Appointments extends Component {
               <tr>
                 <th>Data</th>
                 <th>Horário</th>
-                <th>Disponível</th>
               </tr>
             </thead>
             <tbody>
@@ -50,7 +49,6 @@ class Appointments extends Component {
                 <tr key={i}>
                   <td>{dates[i]}</td>
                   <td>{time_slots[i]}</td>
-                  <td>{is_available[i] ? "Sim" : "Não"}</td>
                 </tr>
               ))}
             </tbody>

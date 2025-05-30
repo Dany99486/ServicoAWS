@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import './App.css';
 import DataFetchPut from './utils/DataFetchPut';
+import DataFetchPost from './utils/DataFetchPost';
 import DataFetchGet from './utils/DataFetchGet';
 
 class Reparacoes extends Component {
@@ -40,19 +41,55 @@ class Reparacoes extends Component {
   }
 
   async marcarComoConcluida(index) {
-    const body = { status: "entregue" };
-    const url = `repairs/${this.repairs.user_ids[index]}/${this.repairs.request_ids[index]}/`;
+    const status = this.repairs.statuses[index];
+    const user_id = this.repairs.user_ids[index];
+    const request_id = this.repairs.request_ids[index];
+
+    let url = "";
+    let body = { user_id, request_id };
+
+    if (status === "aguardando_confirmacao_presenca") {
+      url = "client-present/";
+      body.presente = true;
+    } else if (status === "aguardando_conclusao_reparacao") {
+      url = "repair-done/";
+    } else if (status === "aguardando_recolha") {
+      url = "confirmar-recolha/";
+    } else {
+      alert("Estado da reparação não suportado.");
+      return;
+    }
 
     try {
-      const res = await DataFetchPut(url, body);
-      if (res.success === "yes") {
-        alert("Reparação marcada como concluída!");
+      const resPost = await DataFetchPost(url, body);
+      if (resPost.success === "yes") {
+        alert("Reparação atualizada com sucesso!");
         window.location.reload();
+      } else {
+        alert("Falha ao comunicar com a API.");
       }
     } catch (error) {
-      alert("Erro ao atualizar o status.");
+      alert("Erro ao comunicar com a API.");
     }
   }
+  /*async marcarComoConcluida(index) {
+    const bodyPost = {
+      user_id: this.repairs.user_ids[index],
+      request_id: this.repairs.request_ids[index],
+    };
+
+    try {
+      const resPost = await DataFetchPost('client-present/', bodyPost);
+      if (resPost.success === "yes") {
+        alert("Reparação marcada como concluída com sucesso!");
+        window.location.reload();
+      } else {
+        alert("Falha ao confirmar reparação na API.");
+      }
+    } catch (error) {
+      alert("Erro ao comunicar com a API.");
+    }
+  }*/
 
   render() {
     const { request_ids, user_ids, services, dates, slots, statuses, costs, notes } = this.repairs;
@@ -103,12 +140,19 @@ class Reparacoes extends Component {
                   <td>{costs[i] ?? "–"}</td>
                   <td>{notes[i] ?? "–"}</td>
                   <td>
-                    {statuses[i] !== "entregue" && (
-                      <button
-                        className="finish"
-                        onClick={() => this.marcarComoConcluida(i)}
-                      >
-                        Marcar como concluída
+                    {statuses[i] === "aguardando_confirmacao_presenca" && (
+                      <button className="finish" onClick={() => this.marcarComoPresente(i)}>
+                        Confirmar presença
+                      </button>
+                    )}
+                    {statuses[i] === "aguardando_conclusao_reparacao" && (
+                      <button className="finish" onClick={() => this.marcarComoConcluida(i)}>
+                        Confirmar Reparação
+                      </button>
+                    )}
+                    {statuses[i] === "aguardando_recolha" && (
+                      <button className="finish" onClick={() => this.marcarComoConcluida(i)}>
+                        Confirmar Entrega
                       </button>
                     )}
                   </td>
