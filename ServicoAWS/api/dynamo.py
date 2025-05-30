@@ -2,6 +2,7 @@ import boto3
 from boto3.dynamodb.conditions import Key, Attr
 from django.conf import settings
 from datetime import date, timedelta
+from datetime import datetime
 
 dynamodb = boto3.resource(
     'dynamodb',
@@ -107,21 +108,26 @@ def get_appointments_by_user(user_id):
         )
         
         appointments = response.get('Items', [])
-        
+
+        print("Appointments brutos:", appointments)  # Debug opcional
+
         # Filtra os que não estão disponíveis
         filtered_appointments = [
             item for item in appointments 
             if item.get('status') != 'disponivel'
         ]
         
-        # Ordena por data e hora
+        # Ordena por data e hora, com fallback de data inválida
+        def parse_date(date_str):
+            try:
+                return datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S%z')
+            except Exception:
+                return datetime.min
+
         sorted_appointments = sorted(
             filtered_appointments,
             key=lambda x: (
-                datetime.strptime(
-                    x.get('appointment_date', '1970-01-01 00:00:00+00:00'), 
-                    '%Y-%m-%d %H:%M:%S%z'
-                ),
+                parse_date(x.get('appointment_date', '1970-01-01 00:00:00+00:00')),
                 x.get('time_slot', '')
             )
         )
