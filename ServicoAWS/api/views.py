@@ -1,8 +1,9 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import status
 from .serializers import ClientApprovalSerializer, ConfirmarPagamentoSerializer, ConfirmarPresencaSerializer, ConfirmarRecolhaSerializer, FaceRegisterSerializer, FaceLoginSerializer, RepairRequestSerializer, RepairStatusSerializer, StaffConcluiReparacaoSerializer
 from .rekognition import add_face, search_face
-from .dynamo import update_user_face_id, get_user_by_face_id, get_appointments_for_next_week, get_repair_request
+from .dynamo import get_appointments_by_user, update_user_face_id, get_user_by_face_id, get_appointments_for_next_week, get_repair_request, get_appointments_from_today_flat, get_all_repairs, get_all_users
 from .authentication import get_user_id_from_request
 from .stepfunction import send_approval_result, send_pagamento_result, send_present_result, send_recolha_result, send_repair_result, start_repair_workflow
 import jwt
@@ -24,8 +25,6 @@ class FaceRegisterView(APIView):
             update_user_face_id(user_id, face_id)
             return Response({'message': 'Face registered', 'user_id': user_id, 'face_id': face_id})
         return Response(serializer.errors, status=400)
-
-
 
 class FaceLoginView(APIView):
     def post(self, request):
@@ -114,7 +113,7 @@ class ShopInfoView(APIView):
         }
 
         return Response(shop_info)
-    
+
 class ClientApprovalView(APIView):
     def post(self, request):
         user_id = get_user_id_from_request(request)
@@ -239,3 +238,89 @@ class StaffConcluiReparacaoView(APIView):
             return Response({'error': f'Erro ao comunicar com Step Function: {str(e)}'}, status=500)
         
         return Response({'message': 'Reparação concluída com sucesso'})
+    
+class AppointmentsListView(APIView):
+    def get(self, request):
+        try:
+            appointments = get_appointments_from_today_flat()
+            if not appointments:
+                return Response(
+                    {"message": "Não há agendamentos disponíveis."},
+                    status=status.HTTP_204_NO_CONTENT
+                )
+            return Response({"appointments": appointments})
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+class AllRepairsView(APIView):
+    def get(self, request):
+        try:
+            repairs = get_all_repairs()
+            if not repairs:
+                return Response(
+                    {"message": "Não há reparações disponíveis."},
+                    status=status.HTTP_204_NO_CONTENT
+                )
+            return Response({"repairs": repairs})
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+class AllUsersView(APIView):
+    def get(self, request):
+        try:
+            users = get_all_users()
+            if not users:
+                return Response(
+                    {"message": "Não há utilizadores disponíveis."},
+                    status=status.HTTP_204_NO_CONTENT
+                )
+            return Response({"users": users})
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+            
+class UserAppointmentsView(APIView):
+    def get(self, request):
+        user_id = request.query_params.get('user_id')
+        
+        if not user_id:
+            return Response({'error': 'O parâmetro user_id é obrigatório'}, status=400)
+        
+        try:
+            # Busca os agendamentos no DynamoDB
+            appointments_data = get_appointments_by_user(user_id)
+            
+            # Formata a resposta
+            formatted_appointments = []
+            for app in appointments_data.get('appointments', []):
+                formatted_appointments.append({
+                    'date': app.get('appointment_date', ''),
+                    'time_slot': app.get('time_slot', ''),
+                    'service_type': app.get('service_type', ''),
+                    'status': app.get('status', ''),
+                    'request_id': app.get('request_id', ''),
+                    'final_cost': app.get('final_cost', 0.0),
+                    'technician_notes': app.get('technician_notes', ''),
+                })
+            
+            return Response({
+                "user_id": user_id,
+                "appointments": formatted_appointments
+            })
+            
+        except Exception as e:
+            return Response({
+                "error": str(e),
+                "user_id": user_id,
+                "appointments": []
+            }, status=500)
+        
+

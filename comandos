@@ -9,6 +9,8 @@ Linux
 export AWS_ACCESS_KEY_ID=
 export AWS_SECRET_ACCESS_KEY=
 export AWS_SESSION_TOKEN=
+export AWS_REGION=us-east-1
+export STEP_FUNCTION_ARN=arn:aws:states:us-east-1:712698623574:stateMachine:PrimeTech
 
 aws rekognition create-collection --collection-id primeTechUsers
 aws rekognition delete-collection --collection-id primeTechUsers
