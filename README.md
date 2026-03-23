@@ -19,7 +19,7 @@ This project is a repair management platform built with Django and React, using 
   - `api/authentication.py`: token/auth helper.
 - `React-shop-management/shop-management-react/`: frontend app.
 
-**Deployment**
+### Deployment
 
 The application was deployed using AWS Elastic Beanstalk (EBS).
 
