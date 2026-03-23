@@ -19,33 +19,11 @@ This project is a repair management platform built with Django and React, using 
   - `api/authentication.py`: token/auth helper.
 - `React-shop-management/shop-management-react/`: frontend app.
 
-## Backend setup
+**Deployment**
 
-1. Create virtualenv and install dependencies:
+The application was deployed using AWS Elastic Beanstalk (EBS).
 
-```bash
-python -m venv .venv
-.\.venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-2. Add env vars:
-- `DJANGO_SECRET_KEY`
-- AWS credentials (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`)
-- `AWS_REGION`
-- Step Function ARNs
-
-3. Run database migrations:
-
-```bash
-python manage.py migrate
-```
-
-4. Start the server:
-
-```bash
-python manage.py runserver
-```
+The use of EBS allows for simplified infrastructure management, ensuring automatic scalability of the backend and native integration with the other AWS services used in the project's ecosystem.
 
 ## Architecture overview
 
